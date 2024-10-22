@@ -3,6 +3,12 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 
 // Bileşenin bağlantısı kaldırıldığında/unmounted uygulamamızın state'i güncellemesini durdurmak için useEffect'teki cleanup fonksiyonunu kullanın
 export default function App() {
+  const [isWindowPosition, setIsWindowPosition] = useState(false)
+
+  function toggleWindowSize() {
+    setIsWindowPosition((pre) => !pre)
+  }
+
   return (
     <div className="flex justify-center flex-col items-center py-8">
       <h1 className="text-2xl font-bold pb-4">🐭</h1>
@@ -16,7 +22,7 @@ export default function App() {
           </Link>
         </nav>
         <Routes>
-          <Route path="/" element={<MousePosition />} />
+          <Route path="/" element={toggleWindowSize && <MousePosition />} />
           <Route
             path="/about"
             element={<h1>Mouse&apos;unuzu takip edin!</h1>}
@@ -32,8 +38,10 @@ function MousePosition() {
 
   useEffect(() => {
     function handleMove(e) {
-      setPosition({ x: e.clientX, y: e.clientY })
-      console.log('Updating state')
+      if (typeof window !== 'undefined') {
+        setPosition({ x: e.clientX, y: e.clientY })
+        console.log('Updating state')
+      }
     }
     //vercel hatası sonucu farkındalık: window nesnesi yalnızca tarayıcıda çalıştığı için, sunucu tarafında çalıştırıldıklarında hata verir. Bunu kontrol etmek için typeof window ekledim.
     if (typeof window !== 'undefined') {
@@ -41,8 +49,10 @@ function MousePosition() {
     }
     //cleanup fonksiyonu ⬇️ : bileşen unmount olunca çalışır
     return () => {
-      console.log('Unmounted-state güncellenmiyor')
-      window.removeEventListener('pointermove', handleMove)
+      if (typeof window !== 'undefined') {
+        console.log('Unmounted-state güncellenmiyor')
+        window.removeEventListener('pointermove', handleMove)
+      }
     }
   }, [])
 
